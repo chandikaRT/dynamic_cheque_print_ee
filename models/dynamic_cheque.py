@@ -136,7 +136,7 @@ class wizard_cheque_preview(models.TransientModel):
 
         xml_id = self.env['ir.actions.report'].search([('report_name', '=',
                                                         'dynamic_cheque_print_ee.dynamic_cheque_print_template')])
-        pdf_data = xml_id._render_qweb_html(self, data=datas)
+        pdf_data = xml_id._render_qweb_html(self.ids, data=datas)
         data_str = str(pdf_data[0]).split('<main>')[1]
         data_str = str(data_str).split('</main>')[0]
         data_str = data_str.replace('\n','')

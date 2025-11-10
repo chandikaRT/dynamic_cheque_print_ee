@@ -205,21 +205,56 @@ class wizard_dynamic_cheque_print(models.TransientModel):
 
     cheque_format_id = fields.Many2one('dynamic.cheque.format.configuration', string="Cheque Format")
 
+    # def action_call_report(self):
+    #     data = self.read()[0]
+    #     # FIXED: Added proper parentheses for operator precedence
+    #     if self.cheque_format_id.paper_format_id and (self.cheque_format_id.cheque_height <= 0 or self.cheque_format_id.cheque_width <= 0):
+    #         raise UserError(_("Cheque height and width can not be less than Zero(0)."))
+    #     result = self.cheque_format_id.paper_format_id.write({
+    #             'format': 'custom',
+    #             'page_width': self.cheque_format_id.cheque_width,
+    #             'page_height': self.cheque_format_id.cheque_height,
+    #             })
+    #     datas = {
+    #         'ids': self._context.get('active_ids'),
+    #         'model': 'wizard.dynamic.cheque.print',
+    #         'form': data
+    #     }
+
+    #     # FIXED: Updated report_action call for Odoo 17
+    #     return self.env['ir.actions.report'].report_action(self, data=datas)
+    
     def action_call_report(self):
         data = self.read()[0]
-        # FIXED: Added proper parentheses for operator precedence
+        
+        # Validation
         if self.cheque_format_id.paper_format_id and (self.cheque_format_id.cheque_height <= 0 or self.cheque_format_id.cheque_width <= 0):
             raise UserError(_("Cheque height and width can not be less than Zero(0)."))
-        result = self.cheque_format_id.paper_format_id.write({
-                'format': 'custom',
-                'page_width': self.cheque_format_id.cheque_width,
-                'page_height': self.cheque_format_id.cheque_height,
-                })
+        
+        # Update paper format
+        self.cheque_format_id.paper_format_id.write({
+            'format': 'custom',
+            'page_width': self.cheque_format_id.cheque_width,
+            'page_height': self.cheque_format_id.cheque_height,
+        })
+        
+        # Get payment IDs from context
+        payment_ids = self._context.get('active_ids', [])
+        if not payment_ids:
+            raise UserError(_("No payment records selected."))
+        
+        # Prepare report data
         datas = {
-            'ids': self._context.get('active_ids'),
-            'model': 'wizard.dynamic.cheque.print',
+            'ids': payment_ids,
+            'model': 'account.payment',
             'form': data
         }
-
-        # FIXED: Updated report_action call for Odoo 17
-        return self.env['ir.actions.report'].report_action(self, data=datas)
+        
+        # Return explicit dictionary for Odoo 17
+        return {
+            'type': 'ir.actions.report',
+            'report_name': 'dynamic_cheque_print_ee.dynamic_cheque_print_template',
+            'report_type': 'qweb-pdf',
+            'data': datas,
+            'context': self._context,
+        }

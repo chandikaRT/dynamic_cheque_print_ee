@@ -80,9 +80,9 @@
                         <group>
                             <group string="Company Signatory">
                                 <field name="company_name" />
-                                <field name="font_size_company_name" string="Font Size" invisible= "company_name = False" />
-                                <field name="company_name_top_margin" string="Top Margin" invisible= "company_name = False" />
-                                <field name="company_name_left_margin" string="Left Margin" invisible= "company_name = False" />
+                                <field name="font_size_company_name" string="Font Size" invisible= "company_name == False" />
+                                <field name="company_name_top_margin" string="Top Margin" invisible= "company_name == False" />
+                                <field name="company_name_left_margin" string="Left Margin" invisible= "company_name == False" />
                             </group>
                             <group string="Signatore Box">
                                 <field name="cmp_signatory_width" string="Width" />

@@ -10,7 +10,7 @@
 #################################################################################
 
 from odoo import api, models, _
-from odoo.exceptions import Warning
+from odoo.exceptions import UserError
 import datetime
 from textwrap import wrap
 from odoo.addons.dynamic_cheque_print_ee.lang import num2words

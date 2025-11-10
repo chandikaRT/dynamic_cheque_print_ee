@@ -10,7 +10,7 @@
     #################################################################################
 
 from odoo import fields, models, api, _
-from odoo.exceptions import Warning
+from odoo.exceptions import UserError
 from datetime import datetime
 import base64
 import logging

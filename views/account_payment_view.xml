@@ -13,7 +13,7 @@
                             invisible="partner_type == 'customer'"/>
                 </button>
                 <xpath expr="//field[@name='ref']" position="after">
-                    <field name="Cheque_number"/>
+                    <field name="cheque_number"/>
                 </xpath>
             </field>
         </record>

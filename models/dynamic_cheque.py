@@ -189,7 +189,8 @@ class wizard_cheque_preview(models.TransientModel):
             raise UserError(_("Report template not found. Please ensure the module is properly installed."))
         
         # Pass docids as keyword argument
-        pdf_data = xml_id._render_qweb_html(docids=self.ids, data=datas)
+        report_ref = 'dynamic_cheque_print_ee.dynamic_cheque_print_template'
+        pdf_data = self.env['ir.actions.report']._render_qweb_html(report_ref, docids=self.ids, data=datas)
         data_str = str(pdf_data[0]).split('<main>')[1]
         data_str = str(data_str).split('</main>')[0]
         data_str = data_str.replace('\n','')

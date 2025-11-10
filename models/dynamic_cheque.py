@@ -40,6 +40,7 @@ class dynamic_cheque_format_configuration(models.Model):
     # cheque Height-Width Configuration
     cheque_height = fields.Float(string="Height", default=92)
     cheque_width = fields.Float(string="Width", default=199)
+    check_number = fields.Char(string="Check Number")
     # ac_pay Configuration
     is_ac_pay = fields.Boolean(string="A/c Pay", default=True)
     ac_pay_top_margin = fields.Float(string="Top Margin", default=15)

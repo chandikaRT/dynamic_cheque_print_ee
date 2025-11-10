@@ -46,7 +46,9 @@ class dynamic_cheque_print_template(models.AbstractModel):
            'is_pay_acc': self._is_pay_acc,
            'get_amount': self._get_amount,
            'data': data,
-            'Cheque_number': records.mapped('Cheque_number'),
+            #'Cheque_number': records.mapped('Cheque_number'),
+            'check_number': records.mapped('check_number'),
+            
         }
 
     def _get_date(self, date):

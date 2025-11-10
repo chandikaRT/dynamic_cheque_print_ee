@@ -20,36 +20,77 @@ class dynamic_cheque_print_template(models.AbstractModel):
     _name = 'report.dynamic_cheque_print_ee.dynamic_cheque_print_template'
     _description = 'Dynamic Cheque Print Template Report'
 
+    # @api.model
+    # def _get_report_values(self, docids, data=None):
+    #     report = self.env['ir.actions.report']._get_report_from_name('dynamic_cheque_print_ee.dynamic_cheque_print_template')
+    #     if not data.get('form').get('label_preview'):
+    #         records = self.env["account.payment"].browse(data["ids"])
+    #     else:
+    #         records = self.env['wizard.cheque.preview'].browse(data['ids'])
+
+    #     if not data.get('form').get('label_preview'):
+    #         if records.filtered(lambda o: o.payment_type == 'inbound'):
+    #             raise Warning(_('Select out going payments record only.'))
+
+    #     return {
+    #        'doc_ids': records,
+    #        'doc_model': report.model,
+    #        'docs': self,
+    #        'draw_style': self._draw_style,
+    #        'get_date': self._get_date,
+    #        'get_company': self._get_company,
+    #        'get_signatory_one': self._get_signatory_one,
+    #        'get_word_line': self._get_word_line,
+    #        'get_currency_position': self._get_currency_position,
+    #        'num2words': self.num2words,
+    #        'is_pay_acc': self._is_pay_acc,
+    #        'get_amount': self._get_amount,
+    #        'data': data,
+    #         #'Cheque_number': records.mapped('Cheque_number'),
+    #         'check_number': records.mapped('check_number'),
+            
+    #     }
+       
     @api.model
     def _get_report_values(self, docids, data=None):
         report = self.env['ir.actions.report']._get_report_from_name('dynamic_cheque_print_ee.dynamic_cheque_print_template')
-        if not data.get('form').get('label_preview'):
-            records = self.env["account.payment"].browse(data["ids"])
-        else:
-            records = self.env['wizard.cheque.preview'].browse(data['ids'])
-
-        if not data.get('form').get('label_preview'):
+        
+        # Ensure record IDs is always a list
+        record_ids = data.get('ids', [])
+        if isinstance(record_ids, int):
+            record_ids = [record_ids]
+        
+        if not data.get('form', {}).get('label_preview'):
+            # For actual account.payment records
+            records = self.env["account.payment"].browse(record_ids)
+            
+            # Validate payment type - only outbound payments
             if records.filtered(lambda o: o.payment_type == 'inbound'):
-                raise Warning(_('Select out going payments record only.'))
+                raise UserError(_('Select outgoing payments record only.'))
+                
+            # Safely extract check_number if field exists
+            check_number = records.mapped('check_number') if 'check_number' in records._fields else []
+        else:
+            # For wizard.cheque.preview records
+            records = self.env['wizard.cheque.preview'].browse(record_ids)
+            check_number = []  # Wizard model doesn't have check_number field
 
         return {
-           'doc_ids': records,
-           'doc_model': report.model,
-           'docs': self,
-           'draw_style': self._draw_style,
-           'get_date': self._get_date,
-           'get_company': self._get_company,
-           'get_signatory_one': self._get_signatory_one,
-           'get_word_line': self._get_word_line,
-           'get_currency_position': self._get_currency_position,
-           'num2words': self.num2words,
-           'is_pay_acc': self._is_pay_acc,
-           'get_amount': self._get_amount,
-           'data': data,
-            #'Cheque_number': records.mapped('Cheque_number'),
-            'check_number': records.mapped('check_number'),
-            
-        }
+            'doc_ids': records.ids,
+            'doc_model': report.model,
+            'docs': records,  # FIXED: Was incorrectly 'self'
+            'draw_style': self._draw_style,
+            'get_date': self._get_date,
+            'get_company': self._get_company,
+            'get_signatory_one': self._get_signatory_one,
+            'get_word_line': self._get_word_line,
+            'get_currency_position': self._get_currency_position,
+            'num2words': self.num2words,
+            'is_pay_acc': self._is_pay_acc,
+            'get_amount': self._get_amount,
+            'data': data,
+            'check_number': check_number,
+        }    
 
     def _get_date(self, date):
         return datetime.datetime.strptime(str(date), '%Y-%m-%d').strftime('%d%m%Y')

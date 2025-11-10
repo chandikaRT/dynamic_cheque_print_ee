@@ -134,6 +134,26 @@ class wizard_cheque_preview(models.TransientModel):
             raise UserError(_("No records selected for preview."))
         
         # Pass docids as keyword argument
+        # report_ref = 'dynamic_cheque_print_ee.dynamic_cheque_print_template'
+        # pdf_data = self.env['ir.actions.report']._render_qweb_html(report_ref, docids=self.ids, data=datas)
+        # data_str = str(pdf_data[0]).split('<main>')[1]
+        # data_str = str(data_str).split('</main>')[0]
+        # data_str = data_str.replace('\n','')
+        # data_str = data_str.replace('\\n','')
+        # pdf_image = xml_id._run_wkhtmltopdf([str(data_str)], header=None, footer=None, landscape=None, specific_paperformat_args={}, set_viewport_size=False)
+        # with Image(blob=pdf_image) as img:
+        #     filelist = glob.glob("/tmp/*.jpg")
+        #     for f in filelist:
+        #         os.remove(f)
+        #     img.save(filename="/tmp/temp.jpg")
+        # if os.path.exists("/tmp/temp-0.jpg"):
+        #         with open(("/tmp/temp-0.jpg"), "rb") as image_file:
+        #             encoded_string = base64.b64encode(image_file.read())
+        # elif os.path.exists("/tmp/temp.jpg"):
+        #     with open(("/tmp/temp.jpg"), "rb") as image_file:
+        #             encoded_string = base64.b64encode(image_file.read())
+                    
+        # Pass docids as keyword argument
         report_ref = 'dynamic_cheque_print_ee.dynamic_cheque_print_template'
         pdf_data = self.env['ir.actions.report']._render_qweb_html(report_ref, docids=self.ids, data=datas)
         data_str = str(pdf_data[0]).split('<main>')[1]
@@ -141,17 +161,30 @@ class wizard_cheque_preview(models.TransientModel):
         data_str = data_str.replace('\n','')
         data_str = data_str.replace('\\n','')
         pdf_image = xml_id._run_wkhtmltopdf([str(data_str)], header=None, footer=None, landscape=None, specific_paperformat_args={}, set_viewport_size=False)
-        with Image(blob=pdf_image) as img:
-            filelist = glob.glob("/tmp/*.jpg")
-            for f in filelist:
-                os.remove(f)
-            img.save(filename="/tmp/temp.jpg")
-        if os.path.exists("/tmp/temp-0.jpg"):
-                with open(("/tmp/temp-0.jpg"), "rb") as image_file:
+
+        # Handle ImageMagick PDF security policy error
+        try:
+            with Image(blob=pdf_image) as img:
+                filelist = glob.glob("/tmp/*.jpg")
+                for f in filelist:
+                    os.remove(f)
+                img.save(filename="/tmp/temp.jpg")
+            if os.path.exists("/tmp/temp-0.jpg"):
+                with open("/tmp/temp-0.jpg", "rb") as image_file:
                     encoded_string = base64.b64encode(image_file.read())
-        elif os.path.exists("/tmp/temp.jpg"):
-            with open(("/tmp/temp.jpg"), "rb") as image_file:
+            elif os.path.exists("/tmp/temp.jpg"):
+                with open("/tmp/temp.jpg", "rb") as image_file:
                     encoded_string = base64.b64encode(image_file.read())
+        except Exception as e:
+            _logger.warning("PDF to image conversion failed: %s. Cheque preview will not display image.", str(e))
+            encoded_string = False
+
+        # Only update image_preview if conversion succeeded
+        if encoded_string:
+            self.write({'image_preview': encoded_string, 'is_preview': True})
+        else:
+            # Still mark as preview but without image
+            self.write({'is_preview': True})
 
         self.write({'image_preview': encoded_string, 'is_preview' : True})
         ctx = self._context

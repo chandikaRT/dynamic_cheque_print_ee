@@ -56,7 +56,7 @@ class dynamic_cheque_print_template(models.AbstractModel):
         report = self.env['ir.actions.report']._get_report_from_name('dynamic_cheque_print_ee.dynamic_cheque_print_template')
         
         # Ensure record IDs is always a list
-        record_ids = data.get('ids', [])
+        record_ids = data.get('ids', []) if data else docids
         if isinstance(record_ids, int):
             record_ids = [record_ids]
         
@@ -75,10 +75,11 @@ class dynamic_cheque_print_template(models.AbstractModel):
             records = self.env['wizard.cheque.preview'].browse(record_ids)
             check_number = []  # Wizard model doesn't have check_number field
 
+        # THE FIX: Pass recordsets (not IDs) so template can access fields
         return {
-            'doc_ids': records.ids,
+            'doc_ids': records,      # Pass recordset for template iteration
             'doc_model': report.model,
-            'docs': records,  # FIXED: Was incorrectly 'self'
+            'docs': records,         # Fixed: was incorrectly 'self'
             'draw_style': self._draw_style,
             'get_date': self._get_date,
             'get_company': self._get_company,
@@ -90,7 +91,7 @@ class dynamic_cheque_print_template(models.AbstractModel):
             'get_amount': self._get_amount,
             'data': data,
             'check_number': check_number,
-        }    
+        }  
 
     def _get_date(self, date):
         return datetime.datetime.strptime(str(date), '%Y-%m-%d').strftime('%d%m%Y')

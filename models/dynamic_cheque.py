@@ -1,14 +1,4 @@
 # -*- coding: utf-8 -*-
-#################################################################################
-# Author      : Acespritech Solutions Pvt. Ltd. (<www.acespritech.com>)
-# Copyright(c): 2012-Present Acespritech Solutions Pvt. Ltd.
-# All Rights Reserved.
-#
-# This program is copyright property of the author mentioned above.
-# You can`t redistribute it and/or modify it.
-#
-    #################################################################################
-
 from odoo import fields, models, api, _
 from odoo.exceptions import UserError
 from datetime import datetime
@@ -32,7 +22,7 @@ class dynamic_cheque_format_configuration(models.Model):
         xml_id = self.env['ir.actions.report'].search([('report_name', '=',
                                                         'dynamic_cheque_print_ee.dynamic_cheque_print_template')])
         if not xml_id or not xml_id.paperformat_id:
-            raise Warning('Someone has deleted the reference paperformat of report.Please Update the module!')
+            raise UserError('Someone has deleted the reference paperformat of report.Please Update the module!')
         return xml_id.paperformat_id.id
 
     paper_format_id = fields.Many2one('report.paperformat', string="Paper Format", default=_get_report_paperformat_id)
@@ -40,7 +30,6 @@ class dynamic_cheque_format_configuration(models.Model):
     # cheque Height-Width Configuration
     cheque_height = fields.Float(string="Height", default=92)
     cheque_width = fields.Float(string="Width", default=199)
-    check_number = fields.Char(string="Check Number")
     # ac_pay Configuration
     is_ac_pay = fields.Boolean(string="A/c Pay", default=True)
     ac_pay_top_margin = fields.Float(string="Top Margin", default=15)
@@ -117,55 +106,6 @@ class wizard_cheque_preview(models.TransientModel):
     currency_id = fields.Many2one("res.currency", string="Currency")
     image_preview = fields.Binary(string="Image")
     is_preview = fields.Boolean(string="Preview")
-
-    # def action_cheque_preview(self):
-    #     encoded_string = ''
-    #     data = self.read()[0]
-    #     cheque_config_id = self.env['dynamic.cheque.format.configuration'].browse(self._context.get('active_id'))
-    #     if cheque_config_id:
-    #         cheque_config_id.paper_format_id.write({
-    #                 'format': 'custom',
-    #                 'page_width': cheque_config_id.cheque_width,
-    #                 'page_height': cheque_config_id.cheque_height,
-    #             })
-    #     data.update({'label_preview': True, 'cheque_format_id':[cheque_config_id.id, cheque_config_id.name]})
-    #     datas = {
-    #         'ids': self.id,
-    #         'model': 'wizard.cheque.preview',
-    #         'form': data
-    #     }
-
-    #     xml_id = self.env['ir.actions.report'].search([('report_name', '=',
-    #                                                     'dynamic_cheque_print_ee.dynamic_cheque_print_template')])
-    #     pdf_data = xml_id._render_qweb_html(self.ids, data=datas)
-    #     data_str = str(pdf_data[0]).split('<main>')[1]
-    #     data_str = str(data_str).split('</main>')[0]
-    #     data_str = data_str.replace('\n','')
-    #     data_str = data_str.replace('\\n','')
-    #     pdf_image = xml_id._run_wkhtmltopdf([str(data_str)], header=None, footer=None, landscape=None, specific_paperformat_args={}, set_viewport_size=False)
-    #     with Image(blob=pdf_image) as img:
-    #         filelist = glob.glob("/tmp/*.jpg")
-    #         for f in filelist:
-    #             os.remove(f)
-    #         img.save(filename="/tmp/temp.jpg")
-    #     if os.path.exists("/tmp/temp-0.jpg"):
-    #             with open(("/tmp/temp-0.jpg"), "rb") as image_file:
-    #                 encoded_string = base64.b64encode(image_file.read())
-    #     elif os.path.exists("/tmp/temp.jpg"):
-    #         with open(("/tmp/temp.jpg"), "rb") as image_file:
-    #                 encoded_string = base64.b64encode(image_file.read())
-
-    #     self.write({'image_preview': encoded_string, 'is_preview' : True})
-    #     ctx = self._context
-    #     return {
-    #        'name': _('Cheque Preview'),
-    #        'type': 'ir.actions.act_window',
-    #        'view_mode': 'form',
-    #        'res_model': 'wizard.cheque.preview',
-    #        'target': 'new',
-    #        'res_id': self.id,
-    #        'context':ctx,
-    #     }
         
     def action_cheque_preview(self):
         encoded_string = ''
@@ -179,7 +119,7 @@ class wizard_cheque_preview(models.TransientModel):
                 })
         data.update({'label_preview': True, 'cheque_format_id':[cheque_config_id.id, cheque_config_id.name]})
         datas = {
-            'ids': self.id,
+            'ids': self.ids,  # FIXED: Changed from self.id to self.ids
             'model': 'wizard.cheque.preview',
             'form': data
         }
@@ -188,6 +128,10 @@ class wizard_cheque_preview(models.TransientModel):
                                                         'dynamic_cheque_print_ee.dynamic_cheque_print_template')], limit=1)
         if not xml_id:
             raise UserError(_("Report template not found. Please ensure the module is properly installed."))
+        
+        # Safety check for empty records
+        if not self.ids:
+            raise UserError(_("No records selected for preview."))
         
         # Pass docids as keyword argument
         report_ref = 'dynamic_cheque_print_ee.dynamic_cheque_print_template'
@@ -230,8 +174,9 @@ class wizard_dynamic_cheque_print(models.TransientModel):
 
     def action_call_report(self):
         data = self.read()[0]
-        if self.cheque_format_id.paper_format_id and self.cheque_format_id.cheque_height <= 0 or self.cheque_format_id.cheque_width <= 0:
-            raise Warning(_("Cheque height and width can not be less than Zero(0)."))
+        # FIXED: Added proper parentheses for operator precedence
+        if self.cheque_format_id.paper_format_id and (self.cheque_format_id.cheque_height <= 0 or self.cheque_format_id.cheque_width <= 0):
+            raise UserError(_("Cheque height and width can not be less than Zero(0)."))
         result = self.cheque_format_id.paper_format_id.write({
                 'format': 'custom',
                 'page_width': self.cheque_format_id.cheque_width,
@@ -243,6 +188,5 @@ class wizard_dynamic_cheque_print(models.TransientModel):
             'form': data
         }
 
-        return self.env.ref('dynamic_cheque_print_ee.dynamic_cheque_print_report').report_action(self, data=datas)
-
-# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
+        # FIXED: Updated report_action call for Odoo 17
+        return self.env['ir.actions.report'].report_action(self, data=datas)

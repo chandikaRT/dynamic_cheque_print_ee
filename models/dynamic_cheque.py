@@ -117,6 +117,55 @@ class wizard_cheque_preview(models.TransientModel):
     image_preview = fields.Binary(string="Image")
     is_preview = fields.Boolean(string="Preview")
 
+    # def action_cheque_preview(self):
+    #     encoded_string = ''
+    #     data = self.read()[0]
+    #     cheque_config_id = self.env['dynamic.cheque.format.configuration'].browse(self._context.get('active_id'))
+    #     if cheque_config_id:
+    #         cheque_config_id.paper_format_id.write({
+    #                 'format': 'custom',
+    #                 'page_width': cheque_config_id.cheque_width,
+    #                 'page_height': cheque_config_id.cheque_height,
+    #             })
+    #     data.update({'label_preview': True, 'cheque_format_id':[cheque_config_id.id, cheque_config_id.name]})
+    #     datas = {
+    #         'ids': self.id,
+    #         'model': 'wizard.cheque.preview',
+    #         'form': data
+    #     }
+
+    #     xml_id = self.env['ir.actions.report'].search([('report_name', '=',
+    #                                                     'dynamic_cheque_print_ee.dynamic_cheque_print_template')])
+    #     pdf_data = xml_id._render_qweb_html(self.ids, data=datas)
+    #     data_str = str(pdf_data[0]).split('<main>')[1]
+    #     data_str = str(data_str).split('</main>')[0]
+    #     data_str = data_str.replace('\n','')
+    #     data_str = data_str.replace('\\n','')
+    #     pdf_image = xml_id._run_wkhtmltopdf([str(data_str)], header=None, footer=None, landscape=None, specific_paperformat_args={}, set_viewport_size=False)
+    #     with Image(blob=pdf_image) as img:
+    #         filelist = glob.glob("/tmp/*.jpg")
+    #         for f in filelist:
+    #             os.remove(f)
+    #         img.save(filename="/tmp/temp.jpg")
+    #     if os.path.exists("/tmp/temp-0.jpg"):
+    #             with open(("/tmp/temp-0.jpg"), "rb") as image_file:
+    #                 encoded_string = base64.b64encode(image_file.read())
+    #     elif os.path.exists("/tmp/temp.jpg"):
+    #         with open(("/tmp/temp.jpg"), "rb") as image_file:
+    #                 encoded_string = base64.b64encode(image_file.read())
+
+    #     self.write({'image_preview': encoded_string, 'is_preview' : True})
+    #     ctx = self._context
+    #     return {
+    #        'name': _('Cheque Preview'),
+    #        'type': 'ir.actions.act_window',
+    #        'view_mode': 'form',
+    #        'res_model': 'wizard.cheque.preview',
+    #        'target': 'new',
+    #        'res_id': self.id,
+    #        'context':ctx,
+    #     }
+        
     def action_cheque_preview(self):
         encoded_string = ''
         data = self.read()[0]
@@ -135,8 +184,12 @@ class wizard_cheque_preview(models.TransientModel):
         }
 
         xml_id = self.env['ir.actions.report'].search([('report_name', '=',
-                                                        'dynamic_cheque_print_ee.dynamic_cheque_print_template')])
-        pdf_data = xml_id._render_qweb_html(self.ids, data=datas)
+                                                        'dynamic_cheque_print_ee.dynamic_cheque_print_template')], limit=1)
+        if not xml_id:
+            raise UserError(_("Report template not found. Please ensure the module is properly installed."))
+        
+        # Pass docids as keyword argument
+        pdf_data = xml_id._render_qweb_html(docids=self.ids, data=datas)
         data_str = str(pdf_data[0]).split('<main>')[1]
         data_str = str(data_str).split('</main>')[0]
         data_str = data_str.replace('\n','')
@@ -157,13 +210,13 @@ class wizard_cheque_preview(models.TransientModel):
         self.write({'image_preview': encoded_string, 'is_preview' : True})
         ctx = self._context
         return {
-           'name': _('Cheque Preview'),
-           'type': 'ir.actions.act_window',
-           'view_mode': 'form',
-           'res_model': 'wizard.cheque.preview',
-           'target': 'new',
-           'res_id': self.id,
-           'context':ctx,
+        'name': _('Cheque Preview'),
+        'type': 'ir.actions.act_window',
+        'view_mode': 'form',
+        'res_model': 'wizard.cheque.preview',
+        'target': 'new',
+        'res_id': self.id,
+        'context':ctx,
         }
 
 

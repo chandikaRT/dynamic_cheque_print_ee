@@ -21,7 +21,7 @@
                     </group>
                     <group>
                         <field name="is_preview"/>
-                        <field name="image_preview" widget="image" attrs="{'invisible' : [('is_preview', '=', False)]}"/>
+                        <field name="image_preview" widget="image" invisible="is_preview == False"/>
                     </group>
                     <footer>
                         <button name="action_cheque_preview" string="Preview" type="object" class="oe_highlight"/>

@@ -32,9 +32,9 @@
                             </group>
                             <group string="A/c Pay">
                                 <field name="is_ac_pay" />
-                                <field name="ac_pay_top_margin" attrs="{'invisible': [('is_ac_pay', '=', False)]}" />
-                                <field name="ac_pay_left_margin" attrs="{'invisible': [('is_ac_pay', '=', False)]}" />
-                                <field name="font_size_ac_pay" attrs="{'invisible': [('is_ac_pay', '=', False)]}" />
+                                <field name="ac_pay_top_margin" invisible="is_ac_pay == False" />
+                                <field name="ac_pay_left_margin" invisible="is_ac_pay == False" />
+                                <field name="font_size_ac_pay" invisible="is_ac_pay == False" />
                             </group>
                         </group>
                         <group string="Cheque Date">
@@ -56,7 +56,7 @@
                                 <field name="amt_figure_width_area" string="Width" />
                                 <field name="font_size_amt_figure" string="Font Size" />
                                 <field name="currency_symbol" />
-                                <field name="currency_symbol_position" attrs="{'invisible':[('currency_symbol', '=', False)]}" />
+                                <field name="currency_symbol_position" invisible="currency_symbol == False" />
                             </group>
                         </group>
                         <group string="Amount in Words">
@@ -74,15 +74,15 @@
                                 <field name="second_line_words_count" />
                                 <field name="font_size_amt_word" string="Font Size" />
                                 <field name="currency_name" />
-                                <field name="currency_name_position" attrs="{'invisible':[('currency_name', '=', False)]}" />
+                                <field name="currency_name_position" invisible="currency_name == False" />
                             </group>
                         </group>
                         <group>
                             <group string="Company Signatory">
                                 <field name="company_name" />
-                                <field name="font_size_company_name" string="Font Size" attrs="{'invisible':[('company_name', '=', False)]}" />
-                                <field name="company_name_top_margin" string="Top Margin" attrs="{'invisible':[('company_name', '=', False)]}" />
-                                <field name="company_name_left_margin" string="Left Margin" attrs="{'invisible':[('company_name', '=', False)]}" />
+                                <field name="font_size_company_name" string="Font Size" invisible= "company_name = False" />
+                                <field name="company_name_top_margin" string="Top Margin" invisible= "company_name = False" />
+                                <field name="company_name_left_margin" string="Left Margin" invisible= "company_name = False" />
                             </group>
                             <group string="Signatore Box">
                                 <field name="cmp_signatory_width" string="Width" />

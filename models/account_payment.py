@@ -3,7 +3,7 @@ from odoo import models, fields,api
 class AccountPayment(models.Model):
     _inherit = 'account.payment'
 
-    Cheque_number = fields.Char(string='Cheque Number')
+    cheque_number = fields.Char(string='Cheque Number')
 
     @api.model
     def _get_next_cheque_number(self):
